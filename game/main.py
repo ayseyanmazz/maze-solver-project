@@ -1,137 +1,136 @@
 import pygame
 import time
 
-from maze_generator import labirent_uret
-from solver import en_kisa_yolu_bul
-from renderer import labirenti_ciz
-from renderer import cozum_yolunu_ciz
+# Imported from previously translated modules
+from maze_generator import generate_maze
+from solver import find_shortest_path
+from renderer import draw_maze, draw_solution_path
 
 pygame.init()
 
-HUCRE_BOYUTU = 25
+CELL_SIZE = 25
 OFFSET_Y = 40
 
 font = pygame.font.SysFont("Arial", 20)
 clock = pygame.time.Clock()
 
-cozumu_goster = False
-animasyon_index = 0
-animasyon_hizi = 1
+show_solution = False
+animation_index = 0
+animation_speed = 1
 
 
-def yeni_labirent_olustur(boyut):
-    global matris
-    global yol
-    global cozum_suresi
-    global ekran
-    global satir
-    global sutun
-    global EKRAN_GENISLIK
-    global EKRAN_YUKSEKLIK
-    global cozumu_goster
-    global animasyon_index
+def create_new_maze(size):
+    global matrix
+    global path
+    global solution_time
+    global screen
+    global num_rows
+    global num_cols
+    global SCREEN_WIDTH
+    global SCREEN_HEIGHT
+    global show_solution
+    global animation_index
     global tree_parent
 
-    matris, tree_parent = labirent_uret(boyut, boyut)   
-    baslama_zamani = time.time()
-    yol = en_kisa_yolu_bul(matris)
-    bitis_zamani = time.time()
+    matrix, tree_parent = generate_maze(size, size)   
+    start_time = time.time()
+    path = find_shortest_path(matrix)
+    end_time = time.time()
 
-    cozum_suresi = bitis_zamani - baslama_zamani
+    solution_time = end_time - start_time
 
-    satir = len(matris)
-    sutun = len(matris[0])
+    num_rows = len(matrix)
+    num_cols = len(matrix[0])
 
-    EKRAN_GENISLIK = sutun * HUCRE_BOYUTU
-    EKRAN_YUKSEKLIK = satir * HUCRE_BOYUTU + OFFSET_Y
+    SCREEN_WIDTH = num_cols * CELL_SIZE
+    SCREEN_HEIGHT = num_rows * CELL_SIZE + OFFSET_Y
 
-    ekran = pygame.display.set_mode((EKRAN_GENISLIK, EKRAN_YUKSEKLIK))
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Maze Project")
 
-    cozumu_goster = False
-    animasyon_index = 0
+    show_solution = False
+    animation_index = 0
 
 
-yeni_labirent_olustur(31)
+create_new_maze(31)
 
-calisiyor = True
+running = True
 
-while calisiyor:
+while running:
 
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
-            calisiyor = False
+            running = False
 
         elif event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_r:
-                yeni_labirent_olustur(31)
+                create_new_maze(31)
 
             elif event.key == pygame.K_SPACE:
-                cozumu_goster = not cozumu_goster
+                show_solution = not show_solution
 
-                if cozumu_goster:
-                    animasyon_index = 0
+                if show_solution:
+                    animation_index = 0
 
             elif event.key == pygame.K_1:
-                yeni_labirent_olustur(21)
+                create_new_maze(21)
 
             elif event.key == pygame.K_2:
-                yeni_labirent_olustur(31)
+                create_new_maze(31)
 
             elif event.key == pygame.K_3:
-                yeni_labirent_olustur(41)
+                create_new_maze(41)
+
             elif event.key == pygame.K_UP:
-
-                animasyon_hizi += 1
-
-                if animasyon_hizi > 10:
-                    animasyon_hizi = 10
+                animation_speed += 1
+                if animation_speed > 10:
+                    animation_speed = 10
 
             elif event.key == pygame.K_DOWN:
-
-                animasyon_hizi -= 1
-
-                if animasyon_hizi < 1:
-                    animasyon_hizi = 1    
+                animation_speed -= 1
+                if animation_speed < 1:
+                    animation_speed = 1    
                 
 
-    ekran.fill((0, 0, 0))
+    screen.fill((0, 0, 0))
 
-    labirenti_ciz(ekran, matris, HUCRE_BOYUTU)
+    draw_maze(screen, matrix, CELL_SIZE)
 
-    if cozumu_goster:
-        animasyon_index += 1
-        animasyon_index += animasyon_hizi
+    if show_solution:
+        # Step increment plus speed modifier
+        animation_index += 1
+        animation_index += animation_speed
 
-        if animasyon_index > len(yol):
-            animasyon_index = len(yol)
+        if animation_index > len(path):
+            animation_index = len(path)
 
-        cozum_yolunu_ciz(
-            ekran,
-            yol[:animasyon_index],
-            HUCRE_BOYUTU
+        draw_solution_path(
+            screen,
+            path[:animation_index],
+            CELL_SIZE
         )
 
-    bilgi_yazisi = font.render(
-        f"Yol: {len(yol)} | Sure: {cozum_suresi:.5f} sn | Hiz: {animasyon_hizi} | R: Yeni | SPACE: Cozum | 1-2-3: Boyut",
+    # Info HUD text translated to English
+    info_text = font.render(
+        f"Path: {len(path)} | Time: {solution_time:.5f} s | Speed: {animation_speed} | R: New | SPACE: Solve | 1-2-3: Size",
         True,
         (255, 255, 0)
     )
     
-    ekran.blit(bilgi_yazisi, (10, 10))
+    screen.blit(info_text, (10, 10))
 
-    start_yazi = font.render("START", True, (0, 255, 0))
-    end_yazi = font.render("END", True, (0, 0, 255))
+    start_text = font.render("START", True, (0, 255, 0))
+    end_text = font.render("END", True, (0, 0, 255))
 
-    ekran.blit(start_yazi, (5, OFFSET_Y + 5))
+    screen.blit(start_text, (5, OFFSET_Y + 5))
 
-    ekran.blit(
-        end_yazi,
+    screen.blit(
+        end_text,
         (
-            (sutun - 4) * HUCRE_BOYUTU,
-            (satir - 2) * HUCRE_BOYUTU + OFFSET_Y + 5
+            (num_cols - 4) * CELL_SIZE,
+            (num_rows - 2) * CELL_SIZE + OFFSET_Y + 5
         )
     )
 

@@ -1,38 +1,38 @@
 from collections import deque
 
-def en_kisa_yolu_bul(matris):
-    satir_sayisi = len(matris)
-    sutun_sayisi = len(matris[0])
+def find_shortest_path(matrix):
+    num_rows = len(matrix)
+    num_cols = len(matrix[0])
 
-    baslangic = (1, 1)
-    bitis = (satir_sayisi - 2, sutun_sayisi - 2)
+    start = (1, 1)
+    end = (num_rows - 2, num_cols - 2)
 
-    kuyruk = deque()
-    kuyruk.append((baslangic, [baslangic]))
+    queue = deque()
+    queue.append((start, [start]))
 
-    ziyaret_edilen = set()
-    ziyaret_edilen.add(baslangic)
+    visited = set()
+    visited.add(start)
 
-    yonler = [
+    directions = [
         (-1, 0),
         (1, 0),
         (0, -1),
         (0, 1)
     ]
 
-    while kuyruk:
-        (r, c), yol = kuyruk.popleft()
+    while queue:
+        (r, c), path = queue.popleft()
 
-        if (r, c) == bitis:
-            return yol
+        if (r, c) == end:
+            return path
 
-        for dr, dc in yonler:
-            yeni_r = r + dr
-            yeni_c = c + dc
+        for dr, dc in directions:
+            new_r = r + dr
+            new_c = c + dc
 
-            if 0 <= yeni_r < satir_sayisi and 0 <= yeni_c < sutun_sayisi:
-                if matris[yeni_r][yeni_c] == 0 and (yeni_r, yeni_c) not in ziyaret_edilen:
-                    ziyaret_edilen.add((yeni_r, yeni_c))
-                    kuyruk.append(((yeni_r, yeni_c), yol + [(yeni_r, yeni_c)]))
+            if 0 <= new_r < num_rows and 0 <= new_c < num_cols:
+                if matrix[new_r][new_c] == 0 and (new_r, new_c) not in visited:
+                    visited.add((new_r, new_c))
+                    queue.append(((new_r, new_c), path + [(new_r, new_c)]))
 
     return []

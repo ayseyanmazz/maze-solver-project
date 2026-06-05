@@ -2,69 +2,71 @@ import pygame
 
 OFFSET_Y = 40
 
-def labirenti_ciz(ekran, matris, hucre_boyutu):
+def draw_maze(screen, matrix, cell_size):
 
-    satir_sayisi = len(matris)
-    sutun_sayisi = len(matris[0])
+    num_rows = len(matrix)
+    num_cols = len(matrix[0])
 
-    for r in range(satir_sayisi):
-        for c in range(sutun_sayisi):
+    for r in range(num_rows):
+        for c in range(num_cols):
 
-            if matris[r][c] == 1:
-                renk = (0, 0, 0)
+            if matrix[r][c] == 1:
+                color = (0, 0, 0)
             else:
-                renk = (255, 255, 255)
+                color = (255, 255, 255)
 
             pygame.draw.rect(
-                ekran,
-                renk,
+                screen,
+                color,
                 (
-                    c * hucre_boyutu,
-                    r * hucre_boyutu + OFFSET_Y,
-                    hucre_boyutu,
-                    hucre_boyutu
+                    c * cell_size,
+                    r * cell_size + OFFSET_Y,
+                    cell_size,
+                    cell_size
                 )
             )
 
+    # Draw the start cell (Green)
     pygame.draw.rect(
-        ekran,
+        screen,
         (0, 255, 0),
         (
-            1 * hucre_boyutu,
-            1 * hucre_boyutu + OFFSET_Y,
-            hucre_boyutu,
-            hucre_boyutu
+            1 * cell_size,
+            1 * cell_size + OFFSET_Y,
+            cell_size,
+            cell_size
         )
     )
 
+    # Draw the end cell (Blue)
     pygame.draw.rect(
-        ekran,
+        screen,
         (0, 0, 255),
         (
-            (sutun_sayisi - 2) * hucre_boyutu,
-            (satir_sayisi - 2) * hucre_boyutu + OFFSET_Y,
-            hucre_boyutu,
-            hucre_boyutu
+            (num_cols - 2) * cell_size,
+            (num_rows - 2) * cell_size + OFFSET_Y,
+            cell_size,
+            cell_size
         )
     )
 
 
-def cozum_yolunu_ciz(ekran, yol, hucre_boyutu):
+def draw_solution_path(screen, path, cell_size):
 
-    noktalar = []
+    points = []
 
-    for r, c in yol:
+    for r, c in path:
 
-        x = c * hucre_boyutu + hucre_boyutu // 2
-        y = r * hucre_boyutu + hucre_boyutu // 2 + OFFSET_Y
+        x = c * cell_size + cell_size // 2
+        y = r * cell_size + cell_size // 2 + OFFSET_Y
 
-        noktalar.append((x, y))
+        points.append((x, y))
 
-    if len(noktalar) > 1:
+    if len(points) > 1:
         pygame.draw.lines(
-            ekran,
+            screen,
             (255, 0, 0),
             False,
-            noktalar,
+            points,
             5
         )
