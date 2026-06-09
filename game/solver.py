@@ -1,116 +1,95 @@
 from collections import deque
-import time
 
+class BFSVisualizer:
+    def __init__(self, matrix):
+        self.matrix = matrix
+        self.rows = len(matrix)
+        self.cols = len(matrix[0])
+        self.start = (1, 1)
+        self.end = (self.rows - 2, self.cols - 2)
+        self.reset()
 
-def get_open_neighbors(matrix, cell):
-    r, c = cell
-    rows = len(matrix)
-    cols = len(matrix[0])
+    def reset(self):
+        self.queue = deque([self.start])
+        self.visited = {self.start}
+        self.parent = {self.start: None}
+        self.current = self.start
+        self.finished = False
+        self.path_found = False
+        self.shortest_path = []
+        self.path_index = 0
+        self.animating_path = False
 
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    neighbors = []
+    def get_open_neighbors(self, cell):
+        r, c = cell
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        neighbors = []
 
-    for dr, dc in directions:
-        nr = r + dr
-        nc = c + dc
+        for dr, dc in directions:
+            nr = r + dr
+            nc = c + dc
+            if 0 <= nr < self.rows and 0 <= nc < self.cols:
+                if self.matrix[nr][nc] == 0:
+                    neighbors.append((nr, nc))
+        return neighbors
 
-        if 0 <= nr < rows and 0 <= nc < cols:
-            if matrix[nr][nc] == 0:
-                neighbors.append((nr, nc))
+    def build_path(self):
+        current = self.end
+        path = []
+        while current is not None:
+            path.append(current)
+            current = self.parent.get(current)
+        path.reverse()
+        return path
 
-    return neighbors
+    def step(self):
+        if self.finished:
+            return
 
+        if len(self.queue) == 0:
+            self.finished = True
+            return
 
-def build_path(parent, target):
-    path = []
-    current = target
+        self.current = self.queue.popleft()
 
-    while current is not None:
-        path.append(current)
-        current = parent.get(current)
+        if self.current == self.end:
+            self.shortest_path = self.build_path()
+            self.path_found = True
+            self.animating_path = True
+            self.finished = True
+            return
 
-    path.reverse()
-    return path
+        neighbors = self.get_open_neighbors(self.current)
+        for neighbor in neighbors:
+            if neighbor not in self.visited:
+                self.visited.add(neighbor)
+                self.parent[neighbor] = self.current
+                self.queue.append(neighbor)
 
+    def update_path_animation(self):
+        if not self.animating_path:
+            return
 
-def build_alternative_paths(parent, visited, shortest_path):
-    shortest_set = set(shortest_path)
-    children = {}
+        if self.path_index < len(self.shortest_path):
+            # Kırmızı çizginin hızını buradan ayarlıyoruz. 
+            # 1 yerine örneğin 4 adım birden atlarsak çizgi çok daha hızlı çizilir.
+            self.path_index += 4 
+            
+            # İndeksin listenin sonunu aşmasını engelliyoruz
+            if self.path_index > len(self.shortest_path):
+                self.path_index = len(self.shortest_path)
+        else:
+            # Animasyon tamamen bittiğinde animasyon bayrağını kapatıyoruz
+            self.animating_path = False
+            
+    def get_visible_path(self):
+        return self.shortest_path[:self.path_index]
 
-    for cell in visited:
-        children[cell] = []
+    def get_queue_size(self):
+        return len(self.queue)
 
-    for child, par in parent.items():
-        if par is not None:
-            children[par].append(child)
+    def get_visited_count(self):
+        return len(self.visited)
 
-    alternative_paths = []
-
-    for cell in visited:
-        if cell in shortest_set:
-            continue
-
-        # uç nokta mı? yani çocuğu yoksa alternatif dal olarak al
-        if len(children.get(cell, [])) == 0:
-            path = build_path(parent, cell)
-
-            # kırmızı en kısa yolun aynısını alternatif diye çizme
-            if len(path) > 2:
-                alternative_paths.append(path)
-
-    alternative_paths.sort(key=len, reverse=True)
-
-    return alternative_paths[:8]
-
-
-def solve_maze_bfs(matrix):
-    start_time = time.time()
-
-    rows = len(matrix)
-    cols = len(matrix[0])
-
-    start = (1, 1)
-    end = (rows - 2, cols - 2)
-
-    queue = deque([start])
-    visited = set([start])
-
-    parent = {}
-    parent[start] = None
-
-    # BFS tüm ulaşılabilir yolları gezer
-    while queue:
-        current = queue.popleft()
-
-        for neighbor in get_open_neighbors(matrix, current):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                parent[neighbor] = current
-                queue.append(neighbor)
-
-    if end in parent:
-        shortest_path = build_path(parent, end)
-    else:
-        shortest_path = []
-
-    alternative_paths = build_alternative_paths(
-        parent,
-        visited,
-        shortest_path
-    )
-
-    end_time = time.time()
-
-    return {
-        "path": shortest_path,
-        "alternative_paths": alternative_paths,
-        "visited_count": len(visited),
-        "path_length": len(shortest_path),
-        "solve_time": end_time - start_time,
-        "algorithm": "BFS"
-    }
-
-
-def find_shortest_path(matrix):
-    result = solve_maze_bfs(matrix)
-    return result["path"]
+    def get_path_length(self):
+        return len(self.shortest_path)
