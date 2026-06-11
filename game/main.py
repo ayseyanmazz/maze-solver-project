@@ -234,7 +234,7 @@ def draw_panel():
         (f"Path Length: {path_length}", TEXT_COLOR),
         (f"Visited Nodes: {visited_count}", TEXT_COLOR),
         (f"Generation: {generation_time:.5f} s", TEXT_COLOR),
-        (f"Solve: {solve_time:.5f} s", TEXT_COLOR),
+        (f"Solution: {solve_time:.5f} s", TEXT_COLOR),
         (f"Speed: {animation_speed}", TEXT_COLOR),
     ]
 
@@ -273,8 +273,8 @@ def draw_labels():
     screen.blit(
         end_label,
         (
-            maze_offset_x + (maze_size - 5) * cell_size,
-            maze_offset_y + (maze_size - 2) * cell_size + 5
+            maze_offset_x + (maze_size - 2) * cell_size,
+            maze_offset_y + (maze_size -1) * cell_size + 5
         )
     )
 
