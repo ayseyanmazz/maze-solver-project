@@ -1,5 +1,6 @@
 import random
 
+
 def generate_maze(rows=31, cols=31):
     matrix = [[1 for _ in range(cols)] for _ in range(rows)]
 
@@ -9,10 +10,8 @@ def generate_maze(rows=31, cols=31):
     stack = [start]
     visited = {start}
 
-    # TREE structure: child -> parent
-    parent = {
-        start: None
-    }
+    parent = {}
+    parent[start] = None
 
     directions = [(-2, 0), (2, 0), (0, -2), (0, 2)]
 
@@ -32,14 +31,12 @@ def generate_maze(rows=31, cols=31):
         if neighbors:
             nr, nc, dr, dc = random.choice(neighbors)
 
-            # Break the wall
             matrix[r + dr // 2][c + dc // 2] = 0
             matrix[nr][nc] = 0
 
             visited.add((nr, nc))
             stack.append((nr, nc))
 
-            # TREE connection
             parent[(nr, nc)] = (r, c)
 
         else:

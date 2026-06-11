@@ -1,16 +1,25 @@
+# pyright: reportArgumentType=false, reportGeneralTypeIssues=false
+
 from collections import deque
 import time
 
 
-def get_open_neighbors(matrix, cell):
+DIRECTIONS = [
+    (-1, 0),
+    (1, 0),
+    (0, -1),
+    (0, 1)
+]
+
+
+def get_neighbors(matrix, cell):
     r, c = cell
     rows = len(matrix)
     cols = len(matrix[0])
 
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     neighbors = []
 
-    for dr, dc in directions:
+    for dr, dc in DIRECTIONS:
         nr = r + dr
         nc = c + dc
 
@@ -21,9 +30,9 @@ def get_open_neighbors(matrix, cell):
     return neighbors
 
 
-def build_path(parent, target):
+def build_path(parent, end):
     path = []
-    current = target
+    current = end
 
     while current is not None:
         path.append(current)
@@ -31,36 +40,6 @@ def build_path(parent, target):
 
     path.reverse()
     return path
-
-
-def build_alternative_paths(parent, visited, shortest_path):
-    shortest_set = set(shortest_path)
-    children = {}
-
-    for cell in visited:
-        children[cell] = []
-
-    for child, par in parent.items():
-        if par is not None:
-            children[par].append(child)
-
-    alternative_paths = []
-
-    for cell in visited:
-        if cell in shortest_set:
-            continue
-
-        # uç nokta mı? yani çocuğu yoksa alternatif dal olarak al
-        if len(children.get(cell, [])) == 0:
-            path = build_path(parent, cell)
-
-            # kırmızı en kısa yolun aynısını alternatif diye çizme
-            if len(path) > 2:
-                alternative_paths.append(path)
-
-    alternative_paths.sort(key=len, reverse=True)
-
-    return alternative_paths[:8]
 
 
 def solve_maze_bfs(matrix):
@@ -72,43 +51,92 @@ def solve_maze_bfs(matrix):
     start = (1, 1)
     end = (rows - 2, cols - 2)
 
-    queue = deque([start])
-    visited = set([start])
+    queue = deque()
+    queue.append(start)
+
+    visited = set()
+    visited.add(start)
 
     parent = {}
     parent[start] = None
 
-    # BFS tüm ulaşılabilir yolları gezer
+    search_edges = []
+
     while queue:
         current = queue.popleft()
 
-        for neighbor in get_open_neighbors(matrix, current):
+        if current == end:
+            break
+
+        for neighbor in get_neighbors(matrix, current):
             if neighbor not in visited:
                 visited.add(neighbor)
                 parent[neighbor] = current
+                search_edges.append((current, neighbor))
                 queue.append(neighbor)
 
-    if end in parent:
-        shortest_path = build_path(parent, end)
-    else:
-        shortest_path = []
-
-    alternative_paths = build_alternative_paths(
-        parent,
-        visited,
-        shortest_path
-    )
-
-    end_time = time.time()
+    path = build_path(parent, end) if end in parent else []
 
     return {
-        "path": shortest_path,
-        "alternative_paths": alternative_paths,
+        "algorithm": "BFS",
+        "path": path,
+        "search_edges": search_edges,
         "visited_count": len(visited),
-        "path_length": len(shortest_path),
-        "solve_time": end_time - start_time,
-        "algorithm": "BFS"
+        "path_length": len(path),
+        "solve_time": time.time() - start_time
     }
+
+
+def solve_maze_dfs(matrix):
+    start_time = time.time()
+
+    rows = len(matrix)
+    cols = len(matrix[0])
+
+    start = (1, 1)
+    end = (rows - 2, cols - 2)
+
+    stack = []
+    stack.append(start)
+
+    visited = set()
+    visited.add(start)
+
+    parent = {}
+    parent[start] = None
+
+    search_edges = []
+
+    while stack:
+        current = stack.pop()
+
+        if current == end:
+            break
+
+        for neighbor in get_neighbors(matrix, current):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                parent[neighbor] = current
+                search_edges.append((current, neighbor))
+                stack.append(neighbor)
+
+    path = build_path(parent, end) if end in parent else []
+
+    return {
+        "algorithm": "DFS",
+        "path": path,
+        "search_edges": search_edges,
+        "visited_count": len(visited),
+        "path_length": len(path),
+        "solve_time": time.time() - start_time
+    }
+
+
+def solve_maze(matrix, algorithm):
+    if algorithm == "DFS":
+        return solve_maze_dfs(matrix)
+
+    return solve_maze_bfs(matrix)
 
 
 def find_shortest_path(matrix):
